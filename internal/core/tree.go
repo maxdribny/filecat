@@ -1,3 +1,5 @@
+// internal/core/tree.go
+
 package core
 
 import (

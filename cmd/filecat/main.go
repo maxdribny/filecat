@@ -1,3 +1,5 @@
+// cmd/filecat/main.go
+
 package main
 
 import (
@@ -47,7 +49,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("\n%s\n", infoStyle.Render(fmt.Sprintf("Searching for %v", config.Extensions)))
-	fmt.Printf("%s\n", infoStyle.Render(fmt.Sprintf("Exludin directoies: %v", config.ExcludeDirs)))
+	fmt.Printf("%s\n", infoStyle.Render(fmt.Sprintf("Excluding directories: %v", config.ExcludeDirs)))
 
 	// Find all matching files
 	files, err := core.FindFiles(config)
