@@ -66,17 +66,17 @@ func run(cmd *cobra.Command, args []string) error {
 		totalLines += file.LineCount
 	}
 
-	if config.CountOnly {
-		fmt.Println(successStyle.Render(
-			fmt.Sprintf("Found %d files with a total of %d lines of code", len(files), totalLines)))
-		return nil
-	}
-
 	if config.ShowTree {
 		tree := core.GenerateDirectoryTree(config.RootDir, config.ExcludeDirs, config.Extensions)
 		fmt.Println("\nDirectory Structure:")
 		fmt.Println("=====================")
 		fmt.Println(tree)
+	}
+
+	if config.CountOnly {
+		fmt.Println(successStyle.Render(
+			fmt.Sprintf("Found %d files with a total of %d lines of code", len(files), totalLines)))
+		return nil
 	}
 
 	// Combine files into output
