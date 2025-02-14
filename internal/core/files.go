@@ -1,3 +1,5 @@
+// internal/core/files.go
+
 package core
 
 import (
@@ -106,8 +108,8 @@ func CombineFiles(files []FileInfo, config Config) error {
 		if currentExt != file.Ext {
 			currentExt = file.Ext
 			fmt.Fprintf(writer, "\n%s Files:\n", strings.ToUpper(currentExt))
-			fmt.Println(writer, strings.Repeat("=", len(currentExt)+7))
-			fmt.Println(writer)
+			fmt.Fprintln(writer, strings.Repeat("=", len(currentExt)+7))
+			fmt.Fprintln(writer)
 		}
 
 		fmt.Fprintf(writer, "// %s\n", file.Path)
@@ -117,8 +119,8 @@ func CombineFiles(files []FileInfo, config Config) error {
 			continue
 		}
 
-		fmt.Println(writer, string(content))
-		fmt.Println(writer)
+		fmt.Fprintln(writer, string(content))
+		fmt.Fprintln(writer)
 	}
 
 	fmt.Println()

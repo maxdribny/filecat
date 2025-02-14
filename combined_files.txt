@@ -1,0 +1,21 @@
+Directory Structure:
+===================
+.
+  |- cmd
+    |- filecat
+        |- main.go
+  |- internal
+    |- core
+        |- config.go
+        |- files.go
+        |- tree.go
+
+File Contents:
+===============
+
+
+.GO Files:
+// cmd\filecat\main.go
+// internal\core\config.go
+// internal\core\files.go
+// internal\core\tree.go
