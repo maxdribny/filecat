@@ -50,7 +50,7 @@ Examples:
 	}
 
 	// Define flags with improved descriptions
-	rootCmd.Flags().StringP("ext", "e", "go",
+	rootCmd.Flags().StringP("ext", "e", "",
 		`File extension(s) to search for (comma-separated, without dots)
 Examples: "go" or "java,js,py"`)
 
@@ -148,13 +148,26 @@ func run(cmd *cobra.Command, args []string) error {
 			fmt.Sprintf("Found %d files with a total of %d lines of code", len(files), totalLines)))
 	}
 
-	if config.NoCombine && config.CopyOutput {
-		return fmt.Errorf("--no-combine and --copy (-y) cannot be used together: copying requires creating the output file")
+	// Handle copy to clipboard with or without combining
+	if config.CopyOutput {
+		if config.NoCombine {
+			// Generate content in memory without creating a file
+			content, err := core.GenerateContent(files, config)
+			if err != nil {
+				return fmt.Errorf("error generating content: %w", err)
+			}
+
+			if err := core.CopyContentToClipboard(content); err != nil {
+				fmt.Println(errorStyle.Render(fmt.Sprintf("Error copying to clipboard: %v", err)))
+			} else {
+				fmt.Println(successStyle.Render("Content copied to clipboard"))
+			}
+		}
 	}
 
 	// Skip combining files if --no-combine is set
 	if config.NoCombine {
-		return nil // -- this is exiting early which is bad, I want to still be able to copy the file
+		return nil
 	}
 
 	// Combine files into output
@@ -162,7 +175,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error combining files: %w", err)
 	}
 
-	// Copy to clipboard if option specified
+	// Copy to clipboard if option specified (and not already done)
 	if config.CopyOutput {
 		if err := core.CopyToClipboard(config.OutputFile); err != nil {
 			fmt.Println(errorStyle.Render(fmt.Sprintf("Error copying to clipboard: %v", err)))

@@ -12,6 +12,12 @@ import (
 func GenerateDirectoryTree(root string, excludeDirs, extensions []string) string {
 	var tree []string
 
+	// Check if we should match all files
+	matchAllFiles := false
+	if len(extensions) == 1 && extensions[0] == "" {
+		matchAllFiles = true
+	}
+
 	var walk func(dir string, level int)
 	walk = func(dir string, level int) {
 		files, err := os.ReadDir(dir)
@@ -44,11 +50,19 @@ func GenerateDirectoryTree(root string, excludeDirs, extensions []string) string
 				}
 				walk(path, level+1)
 			} else {
-				ext := filepath.Ext(file.Name())
-				for _, validExt := range extensions {
-					if ext == validExt {
+				// Include all files or only files with matching extensions
+				if matchAllFiles {
+					// Skip hidden files
+					if !strings.HasPrefix(file.Name(), ".") {
 						tree = append(tree, fmt.Sprintf("%s    |- %s", prefix, file.Name()))
-						break
+					}
+				} else {
+					ext := filepath.Ext(file.Name())
+					for _, validExt := range extensions {
+						if ext == validExt {
+							tree = append(tree, fmt.Sprintf("%s    |- %s", prefix, file.Name()))
+							break
+						}
 					}
 				}
 			}

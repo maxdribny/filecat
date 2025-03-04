@@ -29,6 +29,12 @@ func FindFiles(config Config) ([]FileInfo, error) {
 		progressbar.OptionSetRenderBlankState(true),
 	)
 
+	// Check if we should match all files (when "none" was specified)
+	matchAllFiles := false
+	if len(config.FileExtensions) == 1 && config.FileExtensions[0] == "" {
+		matchAllFiles = true
+	}
+
 	err := filepath.Walk(config.RootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -40,8 +46,32 @@ func FindFiles(config Config) ([]FileInfo, error) {
 			for _, excludeDir := range config.ExcludeDirs {
 				if strings.Contains(path, excludeDir) {
 					return filepath.SkipDir
+
 				}
 			}
+			return nil
+		}
+
+		// If we're matching all files or the extension matches
+		if matchAllFiles {
+			// Skip hidden files
+			fileName := filepath.Base(path)
+			if strings.HasPrefix(fileName, ".") {
+				return nil
+			}
+
+			lineCount, err := countLines(path)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning, Could not count lines in %s: %v\n", path, err)
+				return nil
+			}
+
+			files = append(files, FileInfo{
+				Path:      path,
+				Ext:       filepath.Ext(path),
+				LineCount: lineCount,
+			})
+
 			return nil
 		}
 
@@ -149,4 +179,51 @@ func CopyToClipboard(filepath string) error {
 	}
 
 	return clipboard.WriteAll(string(content))
+}
+
+func GenerateContent(files []FileInfo, config Config) (string, error) {
+	var builder strings.Builder
+
+	// Write the tree directory
+	tree := GenerateDirectoryTree(config.RootDir, config.ExcludeDirs, config.FileExtensions)
+	fmt.Fprintln(&builder, "Directory Structure:")
+	fmt.Fprintln(&builder, "===================")
+	fmt.Fprintln(&builder, tree)
+	fmt.Fprintln(&builder, "\nFile Contents:")
+	fmt.Fprintln(&builder, "===============\n")
+
+	bar := progressbar.NewOptions(len(files),
+		progressbar.OptionSetDescription("Processing files..."),
+		progressbar.OptionSetWidth(30),
+		progressbar.OptionSetRenderBlankState(true),
+	)
+
+	currentExt := ""
+	for _, file := range files {
+		bar.Add(1)
+
+		if currentExt != file.Ext {
+			currentExt = file.Ext
+			fmt.Fprintf(&builder, "\n%s Files:\n", strings.ToUpper(currentExt))
+			fmt.Fprintln(&builder, strings.Repeat("=", len(currentExt)+7))
+			fmt.Fprintln(&builder)
+		}
+
+		fmt.Fprintf(&builder, "\\ %s\n", file.Path)
+		content, err := os.ReadFile(file.Path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: could not read file %s: %v\n", file.Path, err)
+			continue
+		}
+
+		fmt.Fprintln(&builder, string(content))
+		fmt.Fprintln(&builder)
+	}
+
+	fmt.Println()
+	return builder.String(), nil
+}
+
+func CopyContentToClipboard(content string) error {
+	return clipboard.WriteAll(content)
 }
