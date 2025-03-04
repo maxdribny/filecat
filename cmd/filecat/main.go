@@ -17,6 +17,8 @@ var (
 	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
 
 	infoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
+
+	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
 )
 
 func main() {
@@ -76,6 +78,32 @@ Example: "combined_code.txt"`)
 
 	rootCmd.Flags().BoolP("copy", "y", false,
 		`Copy output file contents to clipboard`)
+
+	// Custom help template
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		fmt.Println(helpStyle.Render("\nfilecat - Source File Combiner and Analyzer"))
+		fmt.Println(helpStyle.Render("=======================================\n"))
+		cmd.Usage()
+		fmt.Println()
+		fmt.Println(helpStyle.Render("Common Usage Patterns:"))
+		fmt.Println(helpStyle.Render("---------------------"))
+		fmt.Println("1. Find and combine all .go files in current directory:")
+		fmt.Println("   filecat -e go")
+		fmt.Println()
+		fmt.Println("2. Generate directory tree and count lines (without combining):")
+		fmt.Println("   filecat -e java -t -c --no-combine")
+		fmt.Println()
+		fmt.Println("3. Combine files with specific extension from a directory and save to custom file:")
+		fmt.Println("   filecat -e js -r \"./src\" -o \"javascript_code.txt\"")
+		fmt.Println()
+		fmt.Println("4. Work with multiple file extensions:")
+		fmt.Println("   filecat -e \"js,ts,jsx\" -r \"./web\" -t")
+		fmt.Println()
+		fmt.Println("5. Combine files and copy result to clipboard:")
+		fmt.Println("   filecat -e py -y")
+		fmt.Println()
+		fmt.Println(helpStyle.Render("Note: Flags can be specified in any order"))
+	})
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(errorStyle.Render(err.Error()))
