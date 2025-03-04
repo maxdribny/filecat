@@ -148,9 +148,13 @@ func run(cmd *cobra.Command, args []string) error {
 			fmt.Sprintf("Found %d files with a total of %d lines of code", len(files), totalLines)))
 	}
 
+	if config.NoCombine && config.CopyOutput {
+		return fmt.Errorf("--no-combine and --copy (-y) cannot be used together: copying requires creating the output file")
+	}
+
 	// Skip combining files if --no-combine is set
 	if config.NoCombine {
-		return nil
+		return nil // -- this is exiting early which is bad, I want to still be able to copy the file
 	}
 
 	// Combine files into output
