@@ -21,8 +21,6 @@ type FileInfo struct {
 }
 
 func FindFiles(config Config) ([]FileInfo, error) {
-	err := filepath.Walk(config.RootDir)
-
 	var files []FileInfo
 
 	bar := progressbar.NewOptions(-1,
