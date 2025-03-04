@@ -6,32 +6,35 @@ import (
 )
 
 type Config struct {
-	ExcludeDirs []string
-	Extensions  []string
-	RootDir     string
-	OutputFile  string
-	CountOnly   bool
-	ShowTree    bool
-	CopyOutput  bool
+	ExcludeDirs    []string
+	FileExtensions []string
+	RootDir        string
+	OutputFile     string
+	CountLines     bool
+	NoCombine      bool
+	ShowTree       bool
+	CopyOutput     bool
 }
 
 func NewConfig(cmd *cobra.Command) (Config, error) {
 	var config Config
 
 	// Get flags from Cobra command
-	extensions, _ := cmd.Flags().GetString("ext")
+	fileExtensions, _ := cmd.Flags().GetString("ext")
 	excludes, _ := cmd.Flags().GetString("exclude")
 	config.RootDir, _ = cmd.Flags().GetString("root")
 	config.OutputFile, _ = cmd.Flags().GetString("out")
-	config.CountOnly, _ = cmd.Flags().GetBool("count")
+	config.CountLines, _ = cmd.Flags().GetBool("count")
+	config.NoCombine, _ = cmd.Flags().GetBool("no-combine")
 	config.ShowTree, _ = cmd.Flags().GetBool("tree")
 	config.CopyOutput, _ = cmd.Flags().GetBool("copy")
 
-	// Parse extensions
-	config.Extensions = strings.Split(extensions, ",")
-	for i, ext := range config.Extensions {
+	// Parse fileExtensions -> adds a leading "." to the file fileExtensions if
+	// missing to ensure all file fileExtensions start with "."
+	config.FileExtensions = strings.Split(fileExtensions, ",")
+	for i, ext := range config.FileExtensions {
 		if !strings.HasPrefix(ext, ".") {
-			config.Extensions[i] = "." + ext
+			config.FileExtensions[i] = "." + ext
 		}
 	}
 

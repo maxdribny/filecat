@@ -45,8 +45,8 @@ func GenerateDirectoryTree(root string, excludeDirs, extensions []string) string
 				walk(path, level+1)
 			} else {
 				ext := filepath.Ext(file.Name())
-				for _, validExit := range extensions {
-					if ext == validExit {
+				for _, validExt := range extensions {
+					if ext == validExt {
 						tree = append(tree, fmt.Sprintf("%s    |- %s", prefix, file.Name()))
 						break
 					}

@@ -21,6 +21,8 @@ type FileInfo struct {
 }
 
 func FindFiles(config Config) ([]FileInfo, error) {
+	err := filepath.Walk(config.RootDir)
+
 	var files []FileInfo
 
 	bar := progressbar.NewOptions(-1,
@@ -46,7 +48,7 @@ func FindFiles(config Config) ([]FileInfo, error) {
 		}
 
 		ext := filepath.Ext(path)
-		for _, validExt := range config.Extensions {
+		for _, validExt := range config.FileExtensions {
 			if ext == validExt {
 				lineCount, err := countLines(path)
 				if err != nil {
@@ -88,7 +90,7 @@ func CombineFiles(files []FileInfo, config Config) error {
 	writer := bufio.NewWriter(outFile)
 
 	// WRite the tree directory
-	tree := GenerateDirectoryTree(config.RootDir, config.ExcludeDirs, config.Extensions)
+	tree := GenerateDirectoryTree(config.RootDir, config.ExcludeDirs, config.FileExtensions)
 	fmt.Fprintln(writer, "Directory Structure:")
 	fmt.Fprintln(writer, "===================")
 	fmt.Fprintln(writer, tree)

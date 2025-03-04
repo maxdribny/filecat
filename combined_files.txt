@@ -1,21 +1,401 @@
 Directory Structure:
 ===================
 .
-  |- cmd
-    |- filecat
-        |- main.go
-  |- internal
-    |- core
-        |- config.go
-        |- files.go
-        |- tree.go
+    |- cmd
+        |- filecat
+            |- main.go
+    |- internal
+        |- core
+            |- config.go
+            |- files.go
+            |- tree.go
 
 File Contents:
 ===============
 
 
 .GO Files:
+==========
+
 // cmd\filecat\main.go
+// cmd/filecat/main.go
+
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/maxdribny/filecat/internal/core"
+	"github.com/spf13/cobra"
+)
+
+var (
+	successStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Bold(true)
+
+	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
+
+	infoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
+)
+
+func main() {
+	var rootCmd = &cobra.Command{
+		Use:   "filecat",
+		Short: "A tool to combine and analyze source files",
+		Long:  `filecat is a command line tool that helps you combine multiple source files into one, generate directory trees, and analyze code files.`,
+		RunE:  run,
+	}
+
+	rootCmd.Flags().StringP("ext", "e", "go", "Comma-seperated list of file extensions to search for (e.g.)")
+	rootCmd.Flags().StringP("exclude", "x", "", "Comma-seperated list of directories to exclude")
+	rootCmd.Flags().StringP("root", "r", ".", "Root directory to start search from")
+	rootCmd.Flags().StringP("out", "o", "combined_files.txt", "Output file name")
+	rootCmd.Flags().BoolP("count", "c", false, "Only count lines of code, don't combine files")
+	rootCmd.Flags().Bool("no-combine", false, "Skip combining files into output")
+	rootCmd.Flags().BoolP("tree", "t", false, "Show directory tree")
+	rootCmd.Flags().BoolP("copy", "y", false, "Copy output to clipboard")
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(errorStyle.Render(err.Error()))
+		os.Exit(1)
+	}
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	config, err := core.NewConfig(cmd)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("\n%s\n", infoStyle.Render(fmt.Sprintf("Searching for %v", config.FileExtensions)))
+	fmt.Printf("%s\n", infoStyle.Render(fmt.Sprintf("Excluding directories: %v", config.ExcludeDirs)))
+
+	// Find all matching files
+	files, err := core.FindFiles(config)
+	if err != nil {
+		return fmt.Errorf("error finding files: %w", err)
+	}
+
+	if len(files) == 0 {
+		return fmt.Errorf("no files found with extensions: %v", config.FileExtensions)
+	}
+
+	totalLines := 0
+	for _, file := range files {
+		totalLines += file.LineCount
+	}
+
+	if config.ShowTree {
+		tree := core.GenerateDirectoryTree(config.RootDir, config.ExcludeDirs, config.FileExtensions)
+		fmt.Println("\nDirectory Structure:")
+		fmt.Println("=====================")
+		fmt.Println(tree)
+	}
+
+	// Always display count if -c/--count flag is set
+	if config.CountLines {
+		fmt.Println(successStyle.Render(
+			fmt.Sprintf("Found %d files with a total of %d lines of code", len(files), totalLines)))
+	}
+
+	// Skip combining files if --no-combine is set
+	if config.NoCombine {
+		return nil
+	}
+
+	// Combine files into output
+	if err := core.CombineFiles(files, config); err != nil {
+		return fmt.Errorf("error combining files: %w", err)
+	}
+
+	// Copy to clipboard if option specified
+	if config.CopyOutput {
+		if err := core.CopyToClipboard(config.OutputFile); err != nil {
+			fmt.Println(errorStyle.Render(fmt.Sprintf("Error copying to clipboard: %v", err)))
+		} else {
+			fmt.Println(successStyle.Render("Content copied to clipboard"))
+		}
+	}
+
+	fmt.Println(successStyle.Render(
+		fmt.Sprintf("Combined %d files into %s with a total of %d lines of code.", len(files), config.OutputFile, totalLines)))
+
+	return nil
+}
+
+
 // internal\core\config.go
+package core
+
+import (
+	"github.com/spf13/cobra"
+	"strings"
+)
+
+type Config struct {
+	ExcludeDirs    []string
+	FileExtensions []string
+	RootDir        string
+	OutputFile     string
+	CountLines     bool
+	NoCombine      bool
+	ShowTree       bool
+	CopyOutput     bool
+}
+
+func NewConfig(cmd *cobra.Command) (Config, error) {
+	var config Config
+
+	// Get flags from Cobra command
+	fileExtensions, _ := cmd.Flags().GetString("ext")
+	excludes, _ := cmd.Flags().GetString("exclude")
+	config.RootDir, _ = cmd.Flags().GetString("root")
+	config.OutputFile, _ = cmd.Flags().GetString("out")
+	config.CountLines, _ = cmd.Flags().GetBool("count")
+	config.NoCombine, _ = cmd.Flags().GetBool("no-combine")
+	config.ShowTree, _ = cmd.Flags().GetBool("tree")
+	config.CopyOutput, _ = cmd.Flags().GetBool("copy")
+
+	// Parse fileExtensions -> adds a leading "." to the file fileExtensions if
+	// missing to ensure all file fileExtensions start with "."
+	config.FileExtensions = strings.Split(fileExtensions, ",")
+	for i, ext := range config.FileExtensions {
+		if !strings.HasPrefix(ext, ".") {
+			config.FileExtensions[i] = "." + ext
+		}
+	}
+
+	if excludes != "" {
+		config.ExcludeDirs = strings.Split(excludes, ",")
+	}
+
+	defaultExcludes := []string{".git", ".idea", ".vscode", "node_modules", "build", "dist"}
+	config.ExcludeDirs = append(config.ExcludeDirs, defaultExcludes...)
+
+	return config, nil
+}
+
+
 // internal\core\files.go
+// internal/core/files.go
+
+package core
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+
+	"github.com/atotto/clipboard"
+	"github.com/schollz/progressbar/v3"
+)
+
+type FileInfo struct {
+	Path      string
+	Ext       string
+	LineCount int
+}
+
+func FindFiles(config Config) ([]FileInfo, error) {
+	// First count the total items to process
+	totalItems := 0
+	err := filepath.Walk(config.RootDir)
+
+	var files []FileInfo
+
+	bar := progressbar.NewOptions(-1,
+		progressbar.OptionSetDescription("Searching files..."),
+		progressbar.OptionSetWidth(30),
+		progressbar.OptionSetRenderBlankState(true),
+	)
+
+	err := filepath.Walk(config.RootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		bar.Add(1)
+
+		if info.IsDir() {
+			for _, excludeDir := range config.ExcludeDirs {
+				if strings.Contains(path, excludeDir) {
+					return filepath.SkipDir
+				}
+			}
+			return nil
+		}
+
+		ext := filepath.Ext(path)
+		for _, validExt := range config.FileExtensions {
+			if ext == validExt {
+				lineCount, err := countLines(path)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Warning, Could not count lines in %s: %v\n", path, err)
+					continue
+				}
+
+				files = append(files, FileInfo{
+					Path:      path,
+					Ext:       ext,
+					LineCount: lineCount,
+				})
+				break
+			}
+		}
+		return nil
+	})
+
+	fmt.Println()
+
+	// Sort files by extension and path
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].Ext != files[j].Ext {
+			return files[i].Ext < files[j].Ext
+		}
+		return files[i].Path < files[j].Path
+	})
+
+	return files, err
+}
+
+func CombineFiles(files []FileInfo, config Config) error {
+	outFile, err := os.Create(config.OutputFile)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %w", err)
+	}
+	defer outFile.Close()
+
+	writer := bufio.NewWriter(outFile)
+
+	// WRite the tree directory
+	tree := GenerateDirectoryTree(config.RootDir, config.ExcludeDirs, config.FileExtensions)
+	fmt.Fprintln(writer, "Directory Structure:")
+	fmt.Fprintln(writer, "===================")
+	fmt.Fprintln(writer, tree)
+	fmt.Fprintln(writer, "\nFile Contents:")
+	fmt.Fprintln(writer, "===============\n")
+
+	bar := progressbar.NewOptions(len(files),
+		progressbar.OptionSetDescription("Combining files..."),
+		progressbar.OptionSetWidth(30),
+		progressbar.OptionSetRenderBlankState(true),
+	)
+
+	currentExt := ""
+	for _, file := range files {
+		bar.Add(1)
+
+		if currentExt != file.Ext {
+			currentExt = file.Ext
+			fmt.Fprintf(writer, "\n%s Files:\n", strings.ToUpper(currentExt))
+			fmt.Fprintln(writer, strings.Repeat("=", len(currentExt)+7))
+			fmt.Fprintln(writer)
+		}
+
+		fmt.Fprintf(writer, "// %s\n", file.Path)
+		content, err := os.ReadFile(file.Path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: could not read file %s: %v\n", file.Path, err)
+			continue
+		}
+
+		fmt.Fprintln(writer, string(content))
+		fmt.Fprintln(writer)
+	}
+
+	fmt.Println()
+	return writer.Flush()
+}
+
+func countLines(filepath string) (int, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	lineCount := 0
+	for scanner.Scan() {
+		lineCount++
+	}
+	return lineCount, scanner.Err()
+}
+
+func CopyToClipboard(filepath string) error {
+	content, err := os.ReadFile(filepath)
+	if err != nil {
+		return fmt.Errorf("failed to read file for clipboard: %w", err)
+	}
+
+	return clipboard.WriteAll(string(content))
+}
+
+
 // internal\core\tree.go
+// internal/core/tree.go
+
+package core
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+func GenerateDirectoryTree(root string, excludeDirs, extensions []string) string {
+	var tree []string
+
+	var walk func(dir string, level int)
+	walk = func(dir string, level int) {
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			return
+		}
+
+		prefix := strings.Repeat("    ", level)
+		dirName := filepath.Base(dir)
+
+		if level == 0 {
+			tree = append(tree, dirName)
+		} else {
+			tree = append(tree, fmt.Sprintf("%s|- %s", prefix, dirName))
+		}
+
+		for _, file := range files {
+			path := filepath.Join(dir, file.Name())
+
+			if file.IsDir() {
+				skip := false
+				for _, excludeDir := range excludeDirs {
+					if strings.Contains(path, excludeDir) {
+						skip = true
+						break
+					}
+				}
+				if skip {
+					continue
+				}
+				walk(path, level+1)
+			} else {
+				ext := filepath.Ext(file.Name())
+				for _, validExt := range extensions {
+					if ext == validExt {
+						tree = append(tree, fmt.Sprintf("%s    |- %s", prefix, file.Name()))
+						break
+					}
+				}
+			}
+		}
+	}
+
+	walk(root, 0)
+	return strings.Join(tree, "\n")
+}
+
+
