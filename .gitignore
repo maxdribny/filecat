@@ -5,6 +5,11 @@
 *.so
 *.dylib
 
+# Ignore release, build and dist folders
+release/
+build/
+dist/
+
 # Test binary, built with `go test -c`
 *.test
 

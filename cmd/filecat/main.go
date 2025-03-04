@@ -82,7 +82,12 @@ Example: "combined_code.txt"`)
 	// Custom help template
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		fmt.Println(helpStyle.Render("\nfilecat - Source File Combiner and Analyzer"))
-		fmt.Println(helpStyle.Render("=======================================\n"))
+		fmt.Println(helpStyle.Render("=============================================\n"))
+
+		// Display the long description
+		fmt.Println(cmd.Long)
+		fmt.Println()
+
 		cmd.Usage()
 		fmt.Println()
 		fmt.Println(helpStyle.Render("Common Usage Patterns:"))
