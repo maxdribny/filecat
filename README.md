@@ -14,12 +14,6 @@ A command line tool for combining and analyzing multiple files into a single out
 - 🚫 **Smart Exclusions**: Automatically excludes common directories like `.git`, `node_modules`
 - 🔄 **Flexible Output**: Control exactly how your code is combined and presented
 
-## Installation
-
-### From Releases
-
-Download the latest release for your platform from the [Releases page](https://github.com/maxdribny/filecat/releases).
-
 ### Using Go
 
 ```bash
