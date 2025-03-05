@@ -14,6 +14,8 @@ A command line tool for combining and analyzing multiple files into a single out
 - 🚫 **Smart Exclusions**: Automatically excludes common directories like `.git`, `node_modules`
 - 🔄 **Flexible Output**: Control exactly how your code is combined and presented
 
+## Installing
+
 ### Using Go
 
 ```bash
@@ -47,12 +49,6 @@ filecat -e java -y
 ## Usage
 
 ```
-filecat - Source File Combiner and Analyzer
-=============================================
-
-'filecat' is an easy to use command line tool written in Go that helps you combine multiple file sources into one, 
-generate directory trees, and analyze code files.
-
 Usage:
   filecat [flags]
 
