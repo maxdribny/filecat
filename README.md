@@ -1,6 +1,6 @@
 # FileCat 📁 🔍
 
-A command line tool for combining and analyzing multiple files into a single output file. Written in Go.
+A command line tool for combining and analyzing multiple source files into a single text file. Written in Go.
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxdribny/filecat)](https://goreportcard.com/report/github.com/maxdribny/filecat)
