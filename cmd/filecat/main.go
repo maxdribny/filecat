@@ -19,33 +19,35 @@ var (
 	infoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
 
 	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+
+	//TODO: Make a style for the description of the tool (pref green)
 )
 
 func main() {
 	var rootCmd = &cobra.Command{
 		Use:   "filecat",
 		Short: "A tool to combine and analyze source files",
-		Long: `filecat is a command line tool that helps you combine multiple file sources into one, 
+		Long: `'filecat'' is an easy to use command line tool written in Go that helps you combine multiple file sources into one, 
 generate directory trees, and analyze code files.
 
 Examples:
-  # Combine all .go files in the current directory into combined_files.txt
-  filecat -e go
+ # Combine all .go files in the current directory into combined_files.txt
+ filecat -e go
 
-  # Combine all .java files from a specific directory, with tree view, into a custom output file
-  filecat -e java -r "C:\path\to\project\src" -t -o "combined_java.txt"
+ # Combine all .java files from a specific directory, with tree view, into a custom output file
+ filecat -e java -r "C:\path\to\project\src" -t -o "combined_java.txt"
 
-  # Only count lines of code for .js files, without combining
-  filecat -e js -r "./web/scripts" -c --no-combine
+ # Only count lines of code for .js files, without combining
+ filecat -e js -r "./web/scripts" -c --no-combine
 
-  # Combine all .py files, show directory tree, and copy to clipboard
-  filecat -e py -t -y
+ # Combine all .py files, show directory tree, and copy to clipboard
+ filecat -e py -t -y
 
-  # Exclude specific directories when searching for .cpp files
-  filecat -e cpp -x "tests,vendor,third_party"`,
+ # Exclude specific directories when searching for .cpp files
+ filecat -e cpp -x "tests,vendor,third_party"`,
 		Example: `  filecat -e go
-  filecat -e java -r "C:\path\to\project\src" -t -o output.txt
-  filecat -e js,ts -r "./web" -c -t`,
+ filecat -e java -r "C:\path\to\project\src" -t -o output.txt
+ filecat -e js,ts -r "./web" -c -t`,
 		RunE: run,
 	}
 
