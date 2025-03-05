@@ -1,7 +1,3 @@
-# filecat
-
-A command line tool for combining and analyzing multiple files into a single output file. Written in Go.
-
 # FileCat 📁 🔍
 
 A command line tool for combining and analyzing multiple files into a single output file. Written in Go.
