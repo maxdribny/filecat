@@ -122,7 +122,7 @@ func CombineFiles(files []FileInfo, config Config) error {
 	fmt.Fprintln(writer, "Directory Structure:")
 	fmt.Fprintln(writer, "===================")
 	fmt.Fprintln(writer, tree)
-	fmt.Fprintln(writer, "\nFile Contents:")
+	fmt.Fprintln(writer, "\nFile Contents Listed Below, Organized by Extension")
 	fmt.Fprintln(writer, "===============\n")
 
 	bar := progressbar.NewOptions(len(files),
