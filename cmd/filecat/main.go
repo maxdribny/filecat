@@ -11,43 +11,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	successStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Bold(true)
-
-	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
-
-	infoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
-
-	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
-
-	//TODO: Make a style for the description of the tool (pref green)
-)
-
 func main() {
 	var rootCmd = &cobra.Command{
 		Use:   "filecat",
 		Short: "A tool to combine and analyze source files",
-		Long: `'filecat'' is an easy to use command line tool written in Go that helps you combine multiple file sources into one, 
+		Long: `'filecat' is an easy to use command line tool written in Go that helps you combine multiple file sources into one, 
 generate directory trees, and analyze code files.
 
-Examples:
- # Combine all .go files in the current directory into combined_files.txt
- filecat -e go
+Run filecat --help for more information.`,
 
- # Combine all .java files from a specific directory, with tree view, into a custom output file
- filecat -e java -r "C:\path\to\project\src" -t -o "combined_java.txt"
-
- # Only count lines of code for .js files, without combining
- filecat -e js -r "./web/scripts" -c --no-combine
-
- # Combine all .py files, show directory tree, and copy to clipboard
- filecat -e py -t -y
-
- # Exclude specific directories when searching for .cpp files
- filecat -e cpp -x "tests,vendor,third_party"`,
 		Example: `  filecat -e go
- filecat -e java -r "C:\path\to\project\src" -t -o output.txt
- filecat -e js,ts -r "./web" -c -t`,
+  filecat -e java -r "C:\path\to\project\src" -t -o output.txt
+  filecat -e js,ts -r "./web" -c -t`,
 		RunE: run,
 	}
 
@@ -90,7 +65,36 @@ Example: "combined_code.txt"`)
 		fmt.Println(cmd.Long)
 		fmt.Println()
 
-		cmd.Usage()
+		// Explicitly print the examples, don't ask me why this works but it prevents strange formatting errors rather than including it in the long
+		// description of the command
+		fmt.Println("Examples:")
+		fmt.Println(" # Combine all .go files in the current directory into combined_files.txt")
+		fmt.Println(" filecat -e go")
+		fmt.Println()
+		fmt.Println(" # Combine all .java files from a specific directory, with tree view, into a custom output file")
+		fmt.Println(" filecat -e java -r \"C:\\path\\to\\project\\src\" -t -o \"combined_java.txt\"")
+		fmt.Println()
+		fmt.Println(" # Only count lines of code for .js files, without combining")
+		fmt.Println(" filecat -e js -r \"./web/scripts\" -c --no-combine")
+		fmt.Println()
+		fmt.Println(" # Combine all .py files, show directory tree, and copy to clipboard")
+		fmt.Println(" filecat -e py -t -y")
+		fmt.Println()
+		fmt.Println(" # Exclude specific directories when searching for .cpp files")
+		fmt.Println(" filecat -e cpp -x \"tests,vendor,third_party\"")
+		fmt.Println()
+
+		// Don't ask me why this works but it just does
+		fmt.Println("Usage:")
+		fmt.Printf(" %s [flags]\n\n", cmd.Name())
+
+		fmt.Println("Examples:")
+		fmt.Println(cmd.Example)
+		fmt.Println()
+
+		cmd.Flags().PrintDefaults()
+		fmt.Println()
+
 		fmt.Println()
 		fmt.Println(helpStyle.Render("Common Usage Patterns:"))
 		fmt.Println(helpStyle.Render("---------------------"))
@@ -117,6 +121,20 @@ Example: "combined_code.txt"`)
 		os.Exit(1)
 	}
 }
+
+// Change var to the explicit variable type
+
+var (
+	successStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Bold(true)
+
+	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
+
+	infoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
+
+	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+
+	//TODO: Make a style for the description of the tool (pref green)
+)
 
 func run(cmd *cobra.Command, args []string) error {
 	config, err := core.NewConfig(cmd)

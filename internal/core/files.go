@@ -71,7 +71,6 @@ func FindFiles(config Config) ([]FileInfo, error) {
 				Ext:       filepath.Ext(path),
 				LineCount: lineCount,
 			})
-
 			return nil
 		}
 
