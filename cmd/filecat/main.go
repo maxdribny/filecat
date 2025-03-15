@@ -16,7 +16,6 @@ func main() {
 		Use:   "filecat",
 		Short: "A tool to combine and analyze source files",
 		Long: `
-
 'filecat' is an easy to use command line tool written in Go that helps you combine multiple file sources into one, 
 generate directory trees, and analyze code files.
 
@@ -59,9 +58,7 @@ Defaults: .git, .idea, .vscode, node_modules, build, dist`)
 	rootCmd.Flags().BoolP("copy", "y", false,
 		`Copy output file contents to clipboard`)
 
-	rootCmd.SetUsageTemplate(`
-Usage:
-  {{.UseLine}} [flags]
+	rootCmd.SetUsageTemplate(`Usage: {{.UseLine}} [flags]
 
 Examples:
 {{.Example}}
