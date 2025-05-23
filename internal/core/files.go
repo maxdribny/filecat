@@ -116,7 +116,7 @@ func CombineFiles(files []FileInfo, config Config) error {
 
 	writer := bufio.NewWriter(outFile)
 
-	// WRite the tree directory
+	// Write the tree directory
 	tree := GenerateDirectoryTree(config.RootDir, config.ExcludeDirs, config.FileExtensions)
 	fmt.Fprintln(writer, "Directory Structure:")
 	fmt.Fprintln(writer, "===================")
@@ -189,7 +189,7 @@ func GenerateContent(files []FileInfo, config Config) (string, error) {
 	fmt.Fprintln(&builder, "===================")
 	fmt.Fprintln(&builder, tree)
 	fmt.Fprintln(&builder, "\nFile Contents:")
-	fmt.Fprintln(&builder, "===============\n")
+	fmt.Fprintln(&builder, "===============")
 
 	bar := progressbar.NewOptions(len(files),
 		progressbar.OptionSetDescription("Processing files..."),

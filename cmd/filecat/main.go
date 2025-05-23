@@ -52,7 +52,7 @@ Defaults: .git, .idea, .vscode, node_modules, build, dist`)
 	rootCmd.Flags().BoolP("count", "c", false,
 		`Count lines of code and display total`)
 	rootCmd.Flags().Bool("no-combine", false,
-		`Skip combining files (useful with -c to only count lines)`)
+		`Do not combine files into an output file (useful with -c to only count lines)`)
 	rootCmd.Flags().BoolP("tree", "t", false,
 		`Show directory tree of matching files`)
 	rootCmd.Flags().BoolP("copy", "y", false,
@@ -111,7 +111,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if config.ShowTree {
 		tree := core.GenerateDirectoryTree(config.RootDir, config.ExcludeDirs, config.FileExtensions)
-		fmt.Println("\nDirectory Structure:")
+		fmt.Println("\nThis is the Directory Structure:")
 		fmt.Println("=====================")
 		fmt.Println(tree)
 	}
