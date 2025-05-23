@@ -27,7 +27,7 @@ func GenerateDirectoryTree(root string, excludeDirs, extensions []string) string
 		dirName := filepath.Base(dir)
 
 		if level == 0 {
-			tree = append(tree, dirName)
+			tree = append(tree, "root")
 		} else {
 			tree = append(tree, fmt.Sprintf("%s|- %s", prefix, dirName))
 		}
