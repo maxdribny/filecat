@@ -1,5 +1,3 @@
-// cmd/filecat/main.go
-
 package main
 
 import (

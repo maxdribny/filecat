@@ -1,5 +1,3 @@
-// internal/core/files.go
-
 package core
 
 import (
@@ -208,7 +206,7 @@ func GenerateContent(files []FileInfo, config Config) (string, error) {
 			fmt.Fprintln(&builder)
 		}
 
-		fmt.Fprintf(&builder, "\\ %s\n", file.Path)
+		fmt.Fprintf(&builder, "--------\nFile location: \\project_dir\\%s\n--------\n\n", file.Path)
 		content, err := os.ReadFile(file.Path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: could not read file %s: %v\n", file.Path, err)
